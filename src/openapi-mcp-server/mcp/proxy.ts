@@ -1,5 +1,5 @@
 import { Server } from '@modelcontextprotocol/sdk/server/index.js'
-import { CallToolRequestSchema, JSONRPCResponse, ListToolsRequestSchema, Tool } from '@modelcontextprotocol/sdk/types.js'
+import { CallToolRequestSchema, ListToolsRequestSchema, Tool } from '@modelcontextprotocol/sdk/types.js'
 import { JSONSchema7 as IJsonSchema } from 'json-schema'
 import { OpenAPIToMCPConverter } from '../openapi/parser'
 import { HttpClient, HttpClientError } from '../client/http-client'
@@ -35,14 +35,6 @@ const TOOL_RENAMES: Record<string, string> = {
 const REVERSE_RENAMES: Record<string, string> = Object.fromEntries(
   Object.entries(TOOL_RENAMES).map(([k, v]) => [v, k])
 )
-
-type PathItemObject = OpenAPIV3.PathItemObject & {
-  get?: OpenAPIV3.OperationObject
-  put?: OpenAPIV3.OperationObject
-  post?: OpenAPIV3.OperationObject
-  delete?: OpenAPIV3.OperationObject
-  patch?: OpenAPIV3.OperationObject
-}
 
 type NewToolDefinition = {
   methods: Array<{
@@ -162,7 +154,7 @@ export class MCPProxy {
             description: method.description,
             inputSchema: method.inputSchema as Tool['inputSchema'],
             annotations: {
-              title: this.operationIdToTitle(method.name),
+              title: this.operationIdToTitle(externalName),
               ...(isReadOnly
                 ? { readOnlyHint: true }
                 : { destructiveHint: true }),
@@ -267,18 +259,6 @@ export class MCPProxy {
     }
 
     return {}
-  }
-
-  private getContentType(headers: Headers): 'text' | 'image' | 'binary' {
-    const contentType = headers.get('content-type')
-    if (!contentType) return 'binary'
-
-    if (contentType.includes('text') || contentType.includes('json')) {
-      return 'text'
-    } else if (contentType.includes('image')) {
-      return 'image'
-    }
-    return 'binary'
   }
 
   private truncateToolName(name: string): string {
