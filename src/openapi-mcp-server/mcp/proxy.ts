@@ -7,6 +7,35 @@ import { OpenAPIV3 } from 'openapi-types'
 import { Transport } from '@modelcontextprotocol/sdk/shared/transport.js'
 import { MARKDOWN_TOOL_DEF, executeMarkdownTool } from '../../markdown-tool'
 
+const TOOL_RENAMES: Record<string, string> = {
+  'post-page':                'create-page',
+  'post-search':              'search',
+  'patch-page':               'update-page',
+  'retrieve-a-page':          'get-page',
+  'retrieve-a-page-property': 'get-page-property',
+  'move-page':                'move-page',
+  'patch-block-children':     'append-blocks',
+  'get-block-children':       'get-block-children',
+  'retrieve-a-block':         'get-block',
+  'update-a-block':           'update-block',
+  'delete-a-block':           'delete-block',
+  'retrieve-a-database':      'get-database',
+  'query-data-source':        'query-database',
+  'create-a-data-source':     'create-database',
+  'retrieve-a-data-source':   'get-data-source',
+  'update-a-data-source':     'update-data-source',
+  'list-data-source-templates': 'list-database-templates',
+  'create-a-comment':         'create-comment',
+  'retrieve-a-comment':       'get-comments',
+  'get-self':                 'get-current-user',
+  'get-user':                 'get-user',
+  'get-users':                'list-users',
+}
+
+const REVERSE_RENAMES: Record<string, string> = Object.fromEntries(
+  Object.entries(TOOL_RENAMES).map(([k, v]) => [v, k])
+)
+
 type PathItemObject = OpenAPIV3.PathItemObject & {
   get?: OpenAPIV3.OperationObject
   put?: OpenAPIV3.OperationObject
@@ -115,23 +144,21 @@ export class MCPProxy {
   }
 
   private setupHandlers() {
-    // Handle tool listing
     this.server.setRequestHandler(ListToolsRequestSchema, async () => {
       const tools: Tool[] = []
 
-      // Add methods as separate tools to match the MCP format
-      Object.entries(this.tools).forEach(([toolName, def]) => {
+      Object.values(this.tools).forEach(def => {
         def.methods.forEach(method => {
-          const toolNameWithMethod = `${toolName}-${method.name}`;
-          const truncatedToolName = this.truncateToolName(toolNameWithMethod);
+          const externalName = this.truncateToolName(
+            TOOL_RENAMES[method.name] ?? method.name
+          )
 
-          // Look up the HTTP method to determine annotations
-          const operation = this.openApiLookup[toolNameWithMethod];
-          const httpMethod = operation?.method?.toLowerCase();
-          const isReadOnly = httpMethod === 'get';
+          const operation = this.openApiLookup[method.name]
+          const httpMethod = operation?.method?.toLowerCase()
+          const isReadOnly = httpMethod === 'get'
 
           tools.push({
-            name: truncatedToolName,
+            name: externalName,
             description: method.description,
             inputSchema: method.inputSchema as Tool['inputSchema'],
             annotations: {
@@ -144,7 +171,6 @@ export class MCPProxy {
         })
       })
 
-      // Register the simplified markdown page creation tool
       tools.push({
         name: MARKDOWN_TOOL_DEF.name,
         description: MARKDOWN_TOOL_DEF.description,
@@ -155,18 +181,16 @@ export class MCPProxy {
       return { tools }
     })
 
-    // Handle tool calling
     this.server.setRequestHandler(CallToolRequestSchema, async (request) => {
       const { name, arguments: params } = request.params
 
-      // Handle the simplified markdown tool
       if (name === MARKDOWN_TOOL_DEF.name) {
         const args = params as { parent_id: string; title: string; markdown: string }
         return executeMarkdownTool(args, this.parseHeadersFromEnv())
       }
 
-      // Find the operation in OpenAPI spec
-      const operation = this.findOperation(name)
+      const internalName = REVERSE_RENAMES[name] ?? name
+      const operation = this.findOperation(internalName)
       if (!operation) {
         throw new Error(`Method ${name} not found`)
       }

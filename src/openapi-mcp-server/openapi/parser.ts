@@ -173,11 +173,11 @@ export class OpenAPIToMCPConverter {
     openApiLookup: Record<string, OpenAPIV3.OperationObject & { method: string; path: string }>
     zip: Record<string, { openApi: OpenAPIV3.OperationObject & { method: string; path: string }; mcp: NewToolMethod }>
   } {
-    const apiName = 'API'
+    const groupKey = '_tools'
 
     const openApiLookup: Record<string, OpenAPIV3.OperationObject & { method: string; path: string }> = {}
     const tools: Record<string, { methods: NewToolMethod[] }> = {
-      [apiName]: { methods: [] },
+      [groupKey]: { methods: [] },
     }
     const zip: Record<string, { openApi: OpenAPIV3.OperationObject & { method: string; path: string }; mcp: NewToolMethod }> = {}
     for (const [path, pathItem] of Object.entries(this.openApiSpec.paths || {})) {
@@ -190,11 +190,10 @@ export class OpenAPIToMCPConverter {
         if (mcpMethod) {
           const uniqueName = this.ensureUniqueName(mcpMethod.name)
           mcpMethod.name = uniqueName
-          // Apply description prefix to the already-built description (which includes error responses)
           mcpMethod.description = this.getDescription(mcpMethod.description)
-          tools[apiName]!.methods.push(mcpMethod)
-          openApiLookup[apiName + '-' + uniqueName] = { ...operation, method, path }
-          zip[apiName + '-' + uniqueName] = { openApi: { ...operation, method, path }, mcp: mcpMethod }
+          tools[groupKey]!.methods.push(mcpMethod)
+          openApiLookup[uniqueName] = { ...operation, method, path }
+          zip[uniqueName] = { openApi: { ...operation, method, path }, mcp: mcpMethod }
         }
       }
     }
@@ -560,10 +559,6 @@ export class OpenAPIToMCPConverter {
   }
 
   private getDescription(description: string): string {
-    // Only add "Notion | " prefix for the Notion API
-    if (this.openApiSpec.info.title === 'Notion API') {
-      return "Notion | " + description
-    }
     return description
   }
 }

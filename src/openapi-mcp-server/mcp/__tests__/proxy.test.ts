@@ -88,7 +88,7 @@ describe('MCPProxy', () => {
 
       // Set up the openApiLookup with our test operation
       ;(proxy as any).openApiLookup = {
-        'API-getTest': {
+        'getTest': {
           operationId: 'getTest',
           responses: { '200': { description: 'Success' } },
           method: 'get',
@@ -102,7 +102,7 @@ describe('MCPProxy', () => {
 
       const result = await callToolHandler({
         params: {
-          name: 'API-getTest',
+          name: 'getTest',
           arguments: {},
         },
       })
@@ -502,7 +502,7 @@ describe('MCPProxy', () => {
 
       // Set up the openApiLookup with our test operation
       ;(proxy as any).openApiLookup = {
-        'API-updatePage': {
+        'updatePage': {
           operationId: 'updatePage',
           responses: { '200': { description: 'Success' } },
           method: 'patch',
@@ -523,7 +523,7 @@ describe('MCPProxy', () => {
 
       await callToolHandler({
         params: {
-          name: 'API-updatePage',
+          name: 'updatePage',
           arguments: {
             data: stringifiedData, // This would normally fail with "Expected object, received string"
           },
@@ -552,7 +552,7 @@ describe('MCPProxy', () => {
       ;(HttpClient.prototype.executeOperation as ReturnType<typeof vi.fn>).mockResolvedValue(mockResponse)
 
       ;(proxy as any).openApiLookup = {
-        'API-createPage': {
+        'createPage': {
           operationId: 'createPage',
           responses: { '200': { description: 'Success' } },
           method: 'post',
@@ -571,7 +571,7 @@ describe('MCPProxy', () => {
 
       await callToolHandler({
         params: {
-          name: 'API-createPage',
+          name: 'createPage',
           arguments: {
             data: nestedData,
           },
@@ -598,7 +598,7 @@ describe('MCPProxy', () => {
       ;(HttpClient.prototype.executeOperation as ReturnType<typeof vi.fn>).mockResolvedValue(mockResponse)
 
       ;(proxy as any).openApiLookup = {
-        'API-appendBlockChildren': {
+        'appendBlockChildren': {
           operationId: 'appendBlockChildren',
           responses: { '200': { description: 'Success' } },
           method: 'patch',
@@ -616,7 +616,7 @@ describe('MCPProxy', () => {
 
       await callToolHandler({
         params: {
-          name: 'API-appendBlockChildren',
+          name: 'appendBlockChildren',
           arguments: {
             children: [block1, block2],
           },
@@ -643,7 +643,7 @@ describe('MCPProxy', () => {
       ;(HttpClient.prototype.executeOperation as ReturnType<typeof vi.fn>).mockResolvedValue(mockResponse)
 
       ;(proxy as any).openApiLookup = {
-        'API-appendBlockChildren': {
+        'appendBlockChildren': {
           operationId: 'appendBlockChildren',
           responses: { '200': { description: 'Success' } },
           method: 'patch',
@@ -660,7 +660,7 @@ describe('MCPProxy', () => {
 
       await callToolHandler({
         params: {
-          name: 'API-appendBlockChildren',
+          name: 'appendBlockChildren',
           arguments: {
             children: [block1, block2],
           },
@@ -682,7 +682,7 @@ describe('MCPProxy', () => {
       ;(HttpClient.prototype.executeOperation as ReturnType<typeof vi.fn>).mockResolvedValue(mockResponse)
 
       ;(proxy as any).openApiLookup = {
-        'API-appendBlockChildren': {
+        'appendBlockChildren': {
           operationId: 'appendBlockChildren',
           responses: { '200': { description: 'Success' } },
           method: 'patch',
@@ -699,7 +699,7 @@ describe('MCPProxy', () => {
 
       await callToolHandler({
         params: {
-          name: 'API-appendBlockChildren',
+          name: 'appendBlockChildren',
           arguments: {
             children: [blockAsString, blockAsObject],
           },
@@ -726,8 +726,8 @@ describe('MCPProxy', () => {
       ;(HttpClient.prototype.executeOperation as ReturnType<typeof vi.fn>).mockResolvedValue(mockResponse)
 
       ;(proxy as any).openApiLookup = {
-        'API-search': {
-          operationId: 'search',
+        'post-search': {
+          operationId: 'post-search',
           responses: { '200': { description: 'Success' } },
           method: 'post',
           path: '/search',
@@ -740,7 +740,7 @@ describe('MCPProxy', () => {
 
       await callToolHandler({
         params: {
-          name: 'API-search',
+          name: 'search',
           arguments: {
             tags: ['hello', 'world', '{ not valid json }'],
           },
@@ -762,8 +762,8 @@ describe('MCPProxy', () => {
       ;(HttpClient.prototype.executeOperation as ReturnType<typeof vi.fn>).mockResolvedValue(mockResponse)
 
       ;(proxy as any).openApiLookup = {
-        'API-search': {
-          operationId: 'search',
+        'post-search': {
+          operationId: 'post-search',
           responses: { '200': { description: 'Success' } },
           method: 'post',
           path: '/search',
@@ -776,7 +776,7 @@ describe('MCPProxy', () => {
 
       await callToolHandler({
         params: {
-          name: 'API-search',
+          name: 'search',
           arguments: {
             query: 'hello world', // Regular string, should NOT be parsed
             filter: '{ not valid json }', // Looks like JSON but isn't valid

@@ -133,11 +133,11 @@ describe('OpenAPIToMCPConverter', () => {
       const converter = new OpenAPIToMCPConverter(sampleSpec)
       const { tools, openApiLookup } = converter.convertToMCPTools()
 
-      expect(tools).toHaveProperty('API')
-      expect(tools.API.methods).toHaveLength(1)
+      expect(tools).toHaveProperty('_tools')
+      expect(tools._tools.methods).toHaveLength(1)
       expect(Object.keys(openApiLookup)).toHaveLength(1)
 
-      const getPetMethod = tools.API.methods.find((m) => m.name === 'getPet')
+      const getPetMethod = tools._tools.methods.find((m) => m.name === 'getPet')
       expect(getPetMethod).toBeDefined()
 
       const params = getParamsFromSchema(getPetMethod!)
@@ -197,7 +197,7 @@ describe('OpenAPIToMCPConverter', () => {
       const converter = new OpenAPIToMCPConverter(specWithLongName)
       const { tools } = converter.convertToMCPTools()
 
-      const longNameMethod = tools.API.methods.find(m => m.name.startsWith('a'.repeat(59)))
+      const longNameMethod = tools._tools.methods.find(m => m.name.startsWith('a'.repeat(59)))
       expect(longNameMethod).toBeDefined()
       expect(longNameMethod!.name.length).toBeLessThanOrEqual(64)
     })
@@ -379,7 +379,7 @@ describe('OpenAPIToMCPConverter', () => {
       const converter = new OpenAPIToMCPConverter(complexSpec)
       const { tools } = converter.convertToMCPTools()
 
-      const getPetMethod = tools.API.methods.find((m) => m.name === 'getPet')
+      const getPetMethod = tools._tools.methods.find((m) => m.name === 'getPet')
       expect(getPetMethod).toBeDefined()
       const params = getParamsFromSchema(getPetMethod!)
       expect(params).toContainEqual({
@@ -394,7 +394,7 @@ describe('OpenAPIToMCPConverter', () => {
       const converter = new OpenAPIToMCPConverter(complexSpec)
       const { tools } = converter.convertToMCPTools()
 
-      const listPetsMethod = tools.API.methods.find((m) => m.name === 'listPets')
+      const listPetsMethod = tools._tools.methods.find((m) => m.name === 'listPets')
       expect(listPetsMethod).toBeDefined()
 
       const params = getParamsFromSchema(listPetsMethod!)
@@ -410,7 +410,7 @@ describe('OpenAPIToMCPConverter', () => {
       const converter = new OpenAPIToMCPConverter(complexSpec)
       const { tools } = converter.convertToMCPTools()
 
-      const listPetsMethod = tools.API.methods.find((m) => m.name === 'listPets')
+      const listPetsMethod = tools._tools.methods.find((m) => m.name === 'listPets')
       expect(listPetsMethod).toBeDefined()
 
       const returnType = getReturnType(listPetsMethod!)
@@ -425,7 +425,7 @@ describe('OpenAPIToMCPConverter', () => {
       const converter = new OpenAPIToMCPConverter(complexSpec)
       const { tools } = converter.convertToMCPTools()
 
-      const createPetMethod = tools.API.methods.find((m) => m.name === 'createPet')
+      const createPetMethod = tools._tools.methods.find((m) => m.name === 'createPet')
       expect(createPetMethod).toBeDefined()
 
       const params = getParamsFromSchema(createPetMethod!)
@@ -446,7 +446,7 @@ describe('OpenAPIToMCPConverter', () => {
       const converter = new OpenAPIToMCPConverter(complexSpec)
       const { tools } = converter.convertToMCPTools()
 
-      const getPetMethod = tools.API.methods.find((m) => m.name === 'getPet')
+      const getPetMethod = tools._tools.methods.find((m) => m.name === 'getPet')
       expect(getPetMethod).toBeDefined()
 
       // We just check that the description includes the error references now.
@@ -457,7 +457,7 @@ describe('OpenAPIToMCPConverter', () => {
       const converter = new OpenAPIToMCPConverter(complexSpec)
       const { tools } = converter.convertToMCPTools()
 
-      const createPetMethod = tools.API.methods.find((m) => m.name === 'createPet')
+      const createPetMethod = tools._tools.methods.find((m) => m.name === 'createPet')
       expect(createPetMethod).toBeDefined()
 
       const params = getParamsFromSchema(createPetMethod!)
@@ -471,12 +471,12 @@ describe('OpenAPIToMCPConverter', () => {
       const converter = new OpenAPIToMCPConverter(complexSpec)
       const { tools } = converter.convertToMCPTools()
 
-      expect(tools.API.methods).toHaveLength(4)
+      expect(tools._tools.methods).toHaveLength(4)
 
-      const methodNames = tools.API.methods.map((m) => m.name)
+      const methodNames = tools._tools.methods.map((m) => m.name)
       expect(methodNames).toEqual(expect.arrayContaining(['listPets', 'createPet', 'getPet', 'updatePet']))
 
-      tools.API.methods.forEach((method) => {
+      tools._tools.methods.forEach((method) => {
         expect(method).toHaveProperty('name')
         expect(method).toHaveProperty('description')
         expect(method).toHaveProperty('inputSchema')
@@ -698,7 +698,7 @@ describe('OpenAPIToMCPConverter', () => {
       const converter = new OpenAPIToMCPConverter(nestedSpec)
       const { tools } = converter.convertToMCPTools()
 
-      const getOrgMethod = tools.API.methods.find((m) => m.name === 'getOrganization')
+      const getOrgMethod = tools._tools.methods.find((m) => m.name === 'getOrganization')
       expect(getOrgMethod).toBeDefined()
 
       const params = getParamsFromSchema(getOrgMethod!)
@@ -730,7 +730,7 @@ describe('OpenAPIToMCPConverter', () => {
       const converter = new OpenAPIToMCPConverter(nestedSpec)
       const { tools } = converter.convertToMCPTools()
 
-      const updateDeptMethod = tools.API.methods.find((m) => m.name === 'updateDepartment')
+      const updateDeptMethod = tools._tools.methods.find((m) => m.name === 'updateDepartment')
       expect(updateDeptMethod).toBeDefined()
 
       const params = getParamsFromSchema(updateDeptMethod!)
@@ -746,7 +746,7 @@ describe('OpenAPIToMCPConverter', () => {
       const converter = new OpenAPIToMCPConverter(nestedSpec)
       const { tools } = converter.convertToMCPTools()
 
-      const getDeptMethod = tools.API.methods.find((m) => m.name === 'getDepartment')
+      const getDeptMethod = tools._tools.methods.find((m) => m.name === 'getDepartment')
       expect(getDeptMethod).toBeDefined()
 
       const params = getParamsFromSchema(getDeptMethod!)
@@ -781,7 +781,7 @@ describe('OpenAPIToMCPConverter', () => {
       const converter = new OpenAPIToMCPConverter(nestedSpec)
       const { tools } = converter.convertToMCPTools()
 
-      const updateDeptMethod = tools.API.methods.find((m) => m.name === 'updateDepartment')
+      const updateDeptMethod = tools._tools.methods.find((m) => m.name === 'updateDepartment')
       expect(updateDeptMethod).toBeDefined()
 
       const params = getParamsFromSchema(updateDeptMethod!)
@@ -794,12 +794,12 @@ describe('OpenAPIToMCPConverter', () => {
       const converter = new OpenAPIToMCPConverter(nestedSpec)
       const { tools } = converter.convertToMCPTools()
 
-      expect(tools.API.methods).toHaveLength(3)
+      expect(tools._tools.methods).toHaveLength(3)
 
-      const methodNames = tools.API.methods.map((m) => m.name)
+      const methodNames = tools._tools.methods.map((m) => m.name)
       expect(methodNames).toEqual(expect.arrayContaining(['getOrganization', 'getDepartment', 'updateDepartment']))
 
-      tools.API.methods.forEach((method) => {
+      tools._tools.methods.forEach((method) => {
         expect(method).toHaveProperty('name')
         expect(method).toHaveProperty('description')
         expect(method).toHaveProperty('inputSchema')
@@ -925,7 +925,7 @@ describe('OpenAPIToMCPConverter', () => {
     const converter = new OpenAPIToMCPConverter(spec as unknown as OpenAPIV3.Document)
     const { tools } = converter.convertToMCPTools()
 
-    const createResourceMethod = tools.API.methods.find((m) => m.name === 'createResource')
+    const createResourceMethod = tools._tools.methods.find((m) => m.name === 'createResource')
     expect(createResourceMethod).toBeDefined()
 
     // Verify const values are preserved in DatabaseIdParent
@@ -1054,7 +1054,7 @@ describe('OpenAPIToMCPConverter - Additional Complex Tests', () => {
       } as OpenAPIV3.Document,
       expected: {
         tools: {
-          API: {
+          _tools: {
             methods: [
               {
                 name: 'getAB',
@@ -1237,7 +1237,7 @@ describe('OpenAPIToMCPConverter - Additional Complex Tests', () => {
           },
         },
         openApiLookup: {
-          'API-getAB': {
+          'getAB': {
             operationId: 'getAB',
             summary: 'Get an A-B object',
             responses: {
@@ -1253,7 +1253,7 @@ describe('OpenAPIToMCPConverter - Additional Complex Tests', () => {
             method: 'get',
             path: '/ab',
           },
-          'API-createAB': {
+          'createAB': {
             operationId: 'createAB',
             summary: 'Create an A-B object',
             requestBody: {
@@ -1374,7 +1374,7 @@ describe('OpenAPIToMCPConverter - Additional Complex Tests', () => {
       } as OpenAPIV3.Document,
       expected: {
         tools: {
-          API: {
+          _tools: {
             methods: [
               {
                 name: 'getComposed',
@@ -1515,7 +1515,7 @@ describe('OpenAPIToMCPConverter - Additional Complex Tests', () => {
           },
         },
         openApiLookup: {
-          'API-getComposed': {
+          'getComposed': {
             operationId: 'getComposed',
             summary: 'Get a composed resource',
             responses: {

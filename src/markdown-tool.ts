@@ -206,7 +206,7 @@ export const MARKDOWN_TOOL_DEF = {
     'Create a new Notion page from markdown content. ' +
     'Accepts a parent page ID, a title, and a markdown string. ' +
     'Supports headings, paragraphs, bold, italic, code, tables, lists, and dividers. ' +
-    'Use this instead of API-post-page when you want to create a page with formatted content.',
+    'Use this instead of create-page when you want to write content as markdown rather than raw Notion block JSON.',
   inputSchema: {
     type: 'object' as const,
     required: ['parent_id', 'title', 'markdown'],
