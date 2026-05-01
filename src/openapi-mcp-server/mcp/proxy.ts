@@ -5,6 +5,7 @@ import { OpenAPIToMCPConverter } from '../openapi/parser'
 import { HttpClient, HttpClientError } from '../client/http-client'
 import { OpenAPIV3 } from 'openapi-types'
 import { Transport } from '@modelcontextprotocol/sdk/shared/transport.js'
+import { MARKDOWN_TOOL_DEF, executeMarkdownTool } from '../../markdown-tool'
 
 type PathItemObject = OpenAPIV3.PathItemObject & {
   get?: OpenAPIV3.OperationObject
@@ -143,12 +144,26 @@ export class MCPProxy {
         })
       })
 
+      // Register the simplified markdown page creation tool
+      tools.push({
+        name: MARKDOWN_TOOL_DEF.name,
+        description: MARKDOWN_TOOL_DEF.description,
+        inputSchema: MARKDOWN_TOOL_DEF.inputSchema as Tool['inputSchema'],
+        annotations: { title: 'Create Page from Markdown', destructiveHint: true },
+      })
+
       return { tools }
     })
 
     // Handle tool calling
     this.server.setRequestHandler(CallToolRequestSchema, async (request) => {
       const { name, arguments: params } = request.params
+
+      // Handle the simplified markdown tool
+      if (name === MARKDOWN_TOOL_DEF.name) {
+        const args = params as { parent_id: string; title: string; markdown: string }
+        return executeMarkdownTool(args, this.parseHeadersFromEnv())
+      }
 
       // Find the operation in OpenAPI spec
       const operation = this.findOperation(name)
