@@ -6,6 +6,7 @@ import { HttpClient, HttpClientError } from '../client/http-client'
 import { OpenAPIV3 } from 'openapi-types'
 import { Transport } from '@modelcontextprotocol/sdk/shared/transport.js'
 import { MARKDOWN_TOOL_DEF, executeMarkdownTool } from '../../markdown-tool'
+import { requestAuthStore } from '../../request-context'
 
 const TOOL_RENAMES: Record<string, string> = {
   'post-page':                'create-page',
@@ -231,6 +232,15 @@ export class MCPProxy {
   }
 
   private parseHeadersFromEnv(): Record<string, string> {
+    // Per-request auth from incoming HTTP Authorization header (auth passthrough)
+    const reqAuth = requestAuthStore.getStore()
+    if (reqAuth) {
+      return {
+        'Authorization': reqAuth,
+        'Notion-Version': '2025-09-03'
+      }
+    }
+
     // First try OPENAPI_MCP_HEADERS (existing behavior)
     const headersJson = process.env.OPENAPI_MCP_HEADERS
     if (headersJson) {
@@ -239,13 +249,10 @@ export class MCPProxy {
         if (typeof headers !== 'object' || headers === null) {
           console.warn('OPENAPI_MCP_HEADERS environment variable must be a JSON object, got:', typeof headers)
         } else if (Object.keys(headers).length > 0) {
-          // Only use OPENAPI_MCP_HEADERS if it contains actual headers
           return headers
         }
-        // If OPENAPI_MCP_HEADERS is empty object, fall through to try NOTION_TOKEN
       } catch (error) {
         console.warn('Failed to parse OPENAPI_MCP_HEADERS environment variable:', error)
-        // Fall through to try NOTION_TOKEN
       }
     }
 

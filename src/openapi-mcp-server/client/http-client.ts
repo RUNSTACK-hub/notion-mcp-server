@@ -5,6 +5,7 @@ import FormData from 'form-data'
 import fs from 'fs'
 import { Headers } from './polyfill-headers'
 import { isFileUploadParameter } from '../openapi/file-upload'
+import { requestAuthStore } from '../../request-context'
 
 export type HttpClientConfig = {
   baseUrl: string
@@ -46,7 +47,16 @@ export class HttpClient {
         },
       },
     })
-    this.api = this.client.init()
+    this.api = this.client.init().then(instance => {
+      instance.interceptors.request.use(config => {
+        const reqAuth = requestAuthStore.getStore()
+        if (reqAuth) {
+          config.headers.set('Authorization', reqAuth)
+        }
+        return config
+      })
+      return instance
+    })
   }
 
   private async prepareFileUpload(operation: OpenAPIV3.OperationObject, params: Record<string, any>): Promise<FormData | null> {

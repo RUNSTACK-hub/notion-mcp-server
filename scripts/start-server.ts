@@ -9,6 +9,7 @@ import os from 'node:os'
 import express from 'express'
 
 import { initProxy, ValidationError } from '../src/init-server'
+import { requestAuthStore } from '../src/request-context'
 
 export async function startServer(args: string[] = process.argv) {
   const filename = fileURLToPath(import.meta.url)
@@ -148,61 +149,64 @@ Examples:
 
     // Handle POST requests for client-to-server communication
     app.post('/mcp', async (req, res) => {
-      try {
-        // Check for existing session ID
-        const sessionId = req.headers['mcp-session-id'] as string | undefined
-        let transport: StreamableHTTPServerTransport
+      const callerAuth = req.headers['authorization'] as string | undefined
+      await requestAuthStore.run(callerAuth, async () => {
+        try {
+          // Check for existing session ID
+          const sessionId = req.headers['mcp-session-id'] as string | undefined
+          let transport: StreamableHTTPServerTransport
 
-        if (sessionId && transports[sessionId]) {
-          // Reuse existing transport
-          transport = transports[sessionId]
-        } else if (!sessionId && isInitializeRequest(req.body)) {
-          // New initialization request
-          transport = new StreamableHTTPServerTransport({
-            sessionIdGenerator: () => randomUUID(),
-            onsessioninitialized: (sessionId) => {
-              // Store the transport by session ID
-              transports[sessionId] = transport
-            }
-          })
+          if (sessionId && transports[sessionId]) {
+            // Reuse existing transport
+            transport = transports[sessionId]
+          } else if (!sessionId && isInitializeRequest(req.body)) {
+            // New initialization request
+            transport = new StreamableHTTPServerTransport({
+              sessionIdGenerator: () => randomUUID(),
+              onsessioninitialized: (sessionId) => {
+                // Store the transport by session ID
+                transports[sessionId] = transport
+              }
+            })
 
-          // Clean up transport when closed
-          transport.onclose = () => {
-            if (transport.sessionId) {
-              delete transports[transport.sessionId]
+            // Clean up transport when closed
+            transport.onclose = () => {
+              if (transport.sessionId) {
+                delete transports[transport.sessionId]
+              }
             }
+
+            const proxy = await initProxy(specPath, baseUrl)
+            await proxy.connect(transport)
+          } else {
+            // Invalid request
+            res.status(400).json({
+              jsonrpc: '2.0',
+              error: {
+                code: -32000,
+                message: 'Bad Request: No valid session ID provided',
+              },
+              id: null,
+            })
+            return
           }
 
-          const proxy = await initProxy(specPath, baseUrl)
-          await proxy.connect(transport)
-        } else {
-          // Invalid request
-          res.status(400).json({
-            jsonrpc: '2.0',
-            error: {
-              code: -32000,
-              message: 'Bad Request: No valid session ID provided',
-            },
-            id: null,
-          })
-          return
+          // Handle the request
+          await transport.handleRequest(req, res, req.body)
+        } catch (error) {
+          console.error('Error handling MCP request:', error)
+          if (!res.headersSent) {
+            res.status(500).json({
+              jsonrpc: '2.0',
+              error: {
+                code: -32603,
+                message: 'Internal server error',
+              },
+              id: null,
+            })
+          }
         }
-
-        // Handle the request
-        await transport.handleRequest(req, res, req.body)
-      } catch (error) {
-        console.error('Error handling MCP request:', error)
-        if (!res.headersSent) {
-          res.status(500).json({
-            jsonrpc: '2.0',
-            error: {
-              code: -32603,
-              message: 'Internal server error',
-            },
-            id: null,
-          })
-        }
-      }
+      })
     })
 
     // Handle GET requests for server-to-client notifications via Streamable HTTP
